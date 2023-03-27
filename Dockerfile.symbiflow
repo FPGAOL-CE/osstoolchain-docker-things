@@ -1,0 +1,30 @@
+FROM continuumio/miniconda3
+
+ENV INSTALL_DIR="/opt/symbiflow"
+ENV FPGA_FAM=xc7
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y ca-certificates git build-essential wget cmake xz-utils sudo --no-install-recommends
+
+
+RUN git clone https://github.com/SymbiFlow/symbiflow-examples
+
+RUN cd symbiflow-examples && \
+    conda env create -f ./${FPGA_FAM}/environment.yml
+
+RUN mkdir -p ${INSTALL_DIR}/${FPGA_FAM}/install && \
+    wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/20220920-124259/symbiflow-arch-defs-install-xc7-007d1c1.tar.xz | tar -xJC ${INSTALL_DIR}/${FPGA_FAM}/install && \
+    wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/20220920-124259/symbiflow-arch-defs-xc7a50t_test-007d1c1.tar.xz | tar -xJC ${INSTALL_DIR}/${FPGA_FAM}/install && \
+    wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/20220920-124259/symbiflow-arch-defs-xc7a100t_test-007d1c1.tar.xz | tar -xJC ${INSTALL_DIR}/${FPGA_FAM}/install && \
+    wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/20220920-124259/symbiflow-arch-defs-xc7a200t_test-007d1c1.tar.xz | tar -xJC ${INSTALL_DIR}/${FPGA_FAM}/install && \
+    wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/20220920-124259/symbiflow-arch-defs-xc7z010_test-007d1c1.tar.xz | tar -xJC ${INSTALL_DIR}/${FPGA_FAM}/install
+
+RUN ln -s /opt/symbiflow/xc7/install /usr/local/xc7
+
+ENV PATH="$INSTALL_DIR/$FPGA_FAM/install/bin:/opt/conda/envs/${FPGA_FAM}/bin/:${PATH}"
+
+COPY ./docker-entrypoint.sh /
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["bash"]
