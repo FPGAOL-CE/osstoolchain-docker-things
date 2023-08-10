@@ -1,0 +1,18 @@
+FROM ubuntu:20.04
+
+ENV ALLOW_ROOT 1
+
+ENV TZ=Asia/Seoul
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y libtinfo5 libncurses5 libx11-6 --no-install-recommends
+
+ADD ./Xilinx_Vivado_2019.1_Installed_ForDocker.tar.gz /
+
+COPY ./docker-entrypoint.sh /
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["/bin/bash"]
