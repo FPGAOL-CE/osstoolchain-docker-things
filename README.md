@@ -18,4 +18,4 @@ The proprietary solution for Xilinx FPGAs.
 
 A local installation is required to be compress to tar.gz format for building the docker file, which certainly won't be released here. Vivado 2019.1 installation using offline full-sized installer is recommended. `xsetup --agree XilinxEULA,3rdPartyEULA --batch Install --config install_config.txt` can be used for command line installation. A config containing only 7-series devices is [here](vivado/install_config.txt). 
 
-See [](vivado/Dockerfile.vivado) for details. 
+See [Dockerfile](vivado/Dockerfile.vivado) for details. 
