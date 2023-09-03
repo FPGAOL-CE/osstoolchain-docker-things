@@ -1,0 +1,33 @@
+FROM ubuntu:20.04 AS builder
+
+COPY ./Xilinx_Vivado_2019.1_Installed_ForDocker.tar.gz /
+
+RUN tar xf /Xilinx_Vivado_2019.1_Installed_ForDocker.tar.gz && rm /*.tar.gz && \
+		rm -rf /opt/Xilinx/Vivado/2019.1/data/parts/xilinx/devint/vault \
+		/opt/Xilinx/Vivado/2019.1/data/xsim \
+		/opt/Xilinx/Vivado/2019.1/data/embeddedsw \
+		/opt/Xilinx/Vivado/2019.1/data/simmodels \
+		/opt/Xilinx/Vivado/2019.1/tps/lnx64/git-2.16.2 \
+		/opt/Xilinx/Vivado/2019.1/tps/lnx64/git-1.9.5 \
+		/opt/Xilinx/Vivado/2019.1/ids_lite \
+		/opt/Xilinx/Vivado/2019.1/msys64 \
+		/opt/Xilinx/Vivado/2019.1/examples \
+		/opt/Xilinx/Vivado/2019.1/hybrid_sim
+
+FROM ubuntu:20.04
+
+ENV ALLOW_ROOT 1
+
+ENV TZ=Asia/Seoul
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y libtinfo5 libncurses5 libx11-6 --no-install-recommends
+
+COPY --from=builder /opt /opt
+
+ENV LD_PRELOAD /lib/x86_64-linux-gnu/libudev.so.1
+ENV PATH /opt/Xilinx/Vivado/2019.1/bin:$PATH
+
+CMD ["/bin/bash"]
