@@ -1,0 +1,31 @@
+FROM continuumio/miniconda3
+
+ENV F4PGA_INSTALL_DIR="/opt/f4pga"
+ENV FPGA_FAM=xc7
+ENV F4PGA_PACKAGES="install-xc7 oxc7a50t_test xc7a100t_test xc7a200t_test xc7z010_test"
+ENV F4PGA_TIMESTAMP="20220920-124259"
+ENV F4PGA_HASH="007d1c1"
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y ca-certificates git build-essential wget cmake xz-utils sudo --no-install-recommends
+
+
+RUN git clone --depth=1 https://github.com/chipsalliance/f4pga-examples
+
+RUN cd f4pga-examples && \
+    conda env create -f ./${FPGA_FAM}/environment.yml
+
+RUN mkdir -p $F4PGA_INSTALL_DIR/$FPGA_FAM && \
+	wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/${F4PGA_TIMESTAMP}/symbiflow-arch-defs-install-xc7-${F4PGA_HASH}.tar.xz | tar -xJC $F4PGA_INSTALL_DIR/${FPGA_FAM} && \
+	wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/${F4PGA_TIMESTAMP}/symbiflow-arch-defs-xc7a50t_test-${F4PGA_HASH}.tar.xz | tar -xJC $F4PGA_INSTALL_DIR/${FPGA_FAM} && \
+	wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/${F4PGA_TIMESTAMP}/symbiflow-arch-defs-xc7a100t_test-${F4PGA_HASH}.tar.xz | tar -xJC $F4PGA_INSTALL_DIR/${FPGA_FAM} && \
+	wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/${F4PGA_TIMESTAMP}/symbiflow-arch-defs-xc7a200t_test-${F4PGA_HASH}.tar.xz | tar -xJC $F4PGA_INSTALL_DIR/${FPGA_FAM} && \
+	wget -qO- https://storage.googleapis.com/symbiflow-arch-defs/artifacts/prod/foss-fpga-tools/symbiflow-arch-defs/continuous/install/${F4PGA_TIMESTAMP}/symbiflow-arch-defs-xc7z010_test-${F4PGA_HASH}.tar.xz | tar -xJC $F4PGA_INSTALL_DIR/${FPGA_FAM}
+
+ENV PATH="$F4PGA_INSTALL_DIR/$FPGA_FAM/install/bin:/opt/conda/envs/${FPGA_FAM}/bin/:${PATH}"
+
+COPY ./docker-entrypoint.sh /
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["bash"]
