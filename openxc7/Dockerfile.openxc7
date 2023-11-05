@@ -24,9 +24,8 @@ RUN cd / && \
 	cd nextpnr-xilinx && \
 	git submodule update --init --recursive && \
 	cmake -DARCH=xilinx -DBUILD_GUI=0 -DCMAKE_INSTALL_PREFIX=/usr/local && \
-	make -j && \
+	make -j8 && \
 	make install && \
-	cp bbasm /usr/local/bin/ && \
 	mkdir /chipdb
 
 RUN cd / && \

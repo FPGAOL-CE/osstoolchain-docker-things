@@ -23,7 +23,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y libtinfo5 libncurses5 libx11-6 --no-install-recommends
+    apt-get install -y libtinfo5 libncurses5 libx11-6 make --no-install-recommends
 
 COPY --from=builder /opt /opt
 
