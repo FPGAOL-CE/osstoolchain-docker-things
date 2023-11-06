@@ -20,12 +20,13 @@ RUN cd / && \
 	make install
 
 RUN cd / && \
-	git clone --depth=1 https://github.com/openXC7/nextpnr-xilinx.git && \
+	git clone --depth=1 -b stable-backports https://github.com/openXC7/nextpnr-xilinx.git && \
 	cd nextpnr-xilinx && \
 	git submodule update --init --recursive && \
 	cmake -DARCH=xilinx -DBUILD_GUI=0 -DCMAKE_INSTALL_PREFIX=/usr/local && \
 	make -j8 && \
 	make install && \
+	(cp bbasm /usr/local/bin/ || true) && \
 	mkdir /chipdb
 
 RUN cd / && \
