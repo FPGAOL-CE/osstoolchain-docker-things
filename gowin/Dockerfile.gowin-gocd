@@ -1,0 +1,51 @@
+FROM gocd/gocd-agent-ubuntu-22.04:v23.3.0 as base
+USER root
+
+# Set the DEBIAN_FRONTEND environment variable to noninteractive in order to suppress any interactive prompts that might come up during package installation.
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install dependencies
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y build-essential clang bison flex libreadline-dev gawk tcl-dev libffi-dev git wget curl cmake \
+    graphviz xdot pkg-config python3 python3-dev python3-setuptools libboost-all-dev zlib1g-dev libftdi1-dev \
+    mercurial libeigen3-dev python3-pip
+
+# Clone and install Apicula
+RUN git clone https://github.com/YosysHQ/apicula.git && \
+    cd apicula && \
+	#git checkout 506d5f9422f57642a78008b71fd0c0434154d648 && \
+    python3 -m pip install apycula
+
+FROM base as build
+
+# Clone and install Yosys
+RUN git clone https://github.com/YosysHQ/yosys.git && \
+    cd yosys && \
+	#git checkout 8e470add4d1d6d1a16711115dbb29c8de8eb54dc && \
+    make && \
+    PREFIX=/opt/yosys make install
+
+# Clone and install nextpnr
+RUN git clone https://github.com/YosysHQ/nextpnr.git && \
+    cd nextpnr && \
+	#git checkout a4d2244300ac0cc0293968aabd56d477beb3ebd7 && \
+    cmake . -DBUILD_PYTHON=OFF -DARCH="gowin;himbaechel" -DHIMBAECHEL_GOWIN_DEVICES=all -DBUILD_GUI=OFF -DCMAKE_INSTALL_PREFIX=/opt/nextpnr-gowin -DGOWIN_BBA_EXECUTABLE=$(which gowin_bba) && \
+    make && \
+    make install
+
+# Clone and install openFPGALoader
+RUN git clone https://github.com/trabucayre/openFPGALoader.git && \
+    cd openFPGALoader && \
+	git checkout 1306c79bdca50efd9e841b660fa967a9a1e58576 && \
+    cmake -DCMAKE_INSTALL_PREFIX=/opt/openfpgaloader . && \
+    make && \
+    make install
+	
+FROM base as production
+
+COPY --from=build /opt/yosys /opt/yosys
+COPY --from=build /opt/nextpnr-gowin /opt/nextpnr-gowin
+COPY --from=build /opt/openfpgaloader /opt/openfpgaloader
+
+ENV PATH /opt/nextpnr-gowin/bin:/opt/yosys/bin:/opt/openfpgaloader/bin:$PATH
+USER go
