@@ -1,0 +1,24 @@
+FROM ubuntu:20.04
+
+ENV ALLOW_ROOT 1
+
+ENV TZ=Asia/Seoul
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y ca-certificates wget sudo build-essential clang bison flex cmake git libreadline-dev gawk curl gnutls-bin openssl file cpio unzip rsync bc python3 --no-install-recommends
+
+RUN useradd -d /home/user -m user && chown user:user /home/user
+USER user
+WORKDIR /home/user
+
+RUN git clone https://github.com/regymm/buildroot
+RUN cp -a buildroot buildroot-mmu
+RUN cd buildroot && make qemu_riscv32_nommu_virt_minimal_defconfig && make
+
+ADD rv32nommu-qemu.sh /home/user/
+
+ENV PATH /home/user/buildroot/output/host/bin:$PATH
+
+CMD ["/bin/bash"]
