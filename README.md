@@ -25,3 +25,29 @@ See [Dockerfile](vivado/Dockerfile.vivado) for details.
 RV32IMA minimal buildroot toolchain for MMU/No-MMU development. Based on my [No MMU buildroot port](https://github.com/regymm/buildroot) Contains a pre-built Linux kernel/rootfs ready for QEMU launch. 
 
 Run image: `docker run regymm/buildroot-rv32mmu` and `docker run regymm/buildroot-rv32nommu`. 
+
+#### QUICKSTART
+
+Clone the test repo:
+```
+git clone https://github.com/FPGAOL-CE/user-examples
+cd user-examples
+```
+
+Generate Makefile using [CaaS Wizard](https://github.com/FPGAOL-CE/caas-wizard.git), using pre-built Docker container as an example:
+```
+docker run -it --rm -v .:/mnt regymm/caasw
+(in Docker)
+cd /mnt/basys3
+caasw.py mfgen --overwrite
+```
+Makefile.caas and run_caas.sh will be generated. You may modify these files for customization, like changing the CHIPDB path.
+
+Do the compilation with OpenXC7 Docker:
+```
+./run_caas.sh
+```
+
+Bitstream will be built at ./build/top.bit
+
+
