@@ -1,0 +1,12 @@
+FROM python:3.12
+#USER root
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y build-essential git python3-requests
+
+
+
+
+RUN git clone https://github.com/FPGAOL-CE/caas-wizard 
+ENV PATH="${PATH}:/caas-wizard"
+CMD ["/bin/bash"]
