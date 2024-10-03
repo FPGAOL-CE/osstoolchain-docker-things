@@ -4,6 +4,7 @@
 
 Pull image: `docker pull regymm/openxc7`
 Build image: `docker build -t regymm/openxc7 -f Dockerfile.openxc7 .`
+Documentation: [OpenXC7 Dockerize User Guide](./openxc7/OpenXC7 Dockerized User Guide.md)
 
 #### F4PGA
 
@@ -21,6 +22,9 @@ A local installation is required to be compress to tar.gz format for building th
 See [Dockerfile](vivado/Dockerfile.vivado) for details. 
 
 #### RISCV TOOLCHAINS
+
+RV32IMA newlib toolchain for compiling baremetal RISC-V 32-bit binaries, like [firmware for custom RISC-V SoCs](https://github.com/regymm/QuasiSoC/). 
+Run image: `docker run regymm/rv32ima`. 
 
 RV32IMA minimal buildroot toolchain for MMU/No-MMU development. Based on my [No MMU buildroot port](https://github.com/regymm/buildroot) Contains a pre-built Linux kernel/rootfs ready for QEMU launch. 
 
