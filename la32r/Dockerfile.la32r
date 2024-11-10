@@ -113,17 +113,30 @@ COPY --from=build /src/la32r-Linux /src/la32r-Linux
 # may be dangerous??
 COPY --from=build /usr/local /usr/local 
 
-RUN cd /src && \
-	git clone --depth=1 https://gitee.com/loongson-edu/la32r-buildroot
-#RUN cp /opt/la32r/sysroot/lib32/ld-linux-loongarch-ilp32s.so.1 /src/la32r-buildroot/output/host/loongarch32-buildroot-linux-gnu/sysroot/lib32/
-
 ENV ARCH loongarch
 ENV CROSS_COMPILE loongarch32r-linux-gnusf-
 ENV PATH /opt/la32r/bin:$PATH
+ADD ./loongarch_docker_defconfig /src/
+
+RUN cd /src && \
+	git clone --depth=1 https://gitee.com/loongson-edu/la32r-buildroot
+
+RUN cd /src/la32r-Linux && tar cvfz ../la32r-Linux.tar.gz . && \
+	cd /src/la32r-buildroot && \
+	cp ../loongarch_docker_defconfig configs/ && make loongarch_docker_defconfig && \
+	(make || true) && \
+	cp /opt/la32r/sysroot/lib32/ld-linux-loongarch-ilp32s.so.1 /src/la32r-buildroot/output/host/loongarch32-buildroot-linux-gnu/sysroot/lib32/ && \
+	make && \
+	cd /src/la32r-buildroot && \
+	mkdir cpio-unpack && cd cpio-unpack && \
+	cat ../output/images/rootfs.cpio | cpio -idmv && \
+	cp /opt/la32r/sysroot/lib32/ld-linux-loongarch-ilp32s.so.1 ./lib32/ && \
+	find . | cpio --create --format='newc' | gzip > ../rootfs-my.cpio.gz
 
 #RUN cd /src/la32r-Linux && \
 	#make ARCH=loongarch la32_defconfig && \
 	#make -j`nproc` ARCH=loongarch CROSS_COMPILE=loongarch32r-linux-gnusf-
 
 ADD ./la32r-qemu.sh /src/
+
 CMD ["/bin/bash"]
