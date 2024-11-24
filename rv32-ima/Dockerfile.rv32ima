@@ -1,0 +1,30 @@
+FROM ubuntu:20.04 AS base
+
+ENV ALLOW_ROOT 1
+
+ENV TZ=Asia/Seoul
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y autoconf automake autotools-dev curl python python3 python3-pip libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev ninja-build git cmake libglib2.0-dev libslirp-dev
+    #apt-get install -y ca-certificates wget sudo build-essential clang bison flex cmake git libreadline-dev gawk curl gnutls-bin openssl file cpio unzip rsync bc python3 --no-install-recommends
+
+FROM base AS builder 
+
+RUN git clone --depth=1 https://github.com/riscv-collab/riscv-gnu-toolchain
+RUN cd riscv-gnu-toolchain && git submodule update --init
+#RUN cd /riscv-gnu-toolchain && ./configure --prefix=/usr --with-multilib-generator="rv32ima-ilp32--" && make -j8 && make install
+RUN cd riscv-gnu-toolchain && ./configure --prefix=/opt/rv32ima --with-arch=rv32ima_zicsr --with-abi=ilp32 && make -j10 && make install
+
+FROM base AS production
+RUN apt-get install -y xxd
+
+COPY --from=builder /opt /opt
+
+RUN useradd -d /home/user -m user && chown user:user /home/user
+USER user
+WORKDIR /home/user
+ENV PATH /opt/rv32ima/bin:$PATH
+
+CMD ["/bin/bash"]
