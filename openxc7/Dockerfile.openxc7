@@ -8,7 +8,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y ca-certificates wget sudo build-essential clang bison flex cmake git libreadline-dev gawk gfortran tcl-dev libffi-dev pkg-config python3 python3-dev libpython3-dev python3-pip python3-yaml python3-venv pypy3 libboost-all-dev zlib1g-dev libeigen3-dev curl gnutls-bin openssl --no-install-recommends
+    apt-get install -y ca-certificates wget sudo build-essential clang bison flex cmake git libreadline-dev gawk gfortran tcl-dev libffi-dev pkg-config python3 python3-dev libpython3-dev python3-pip python3-yaml python3-venv python3-setuptools pypy3 libboost-all-dev zlib1g-dev libeigen3-dev curl gnutls-bin openssl --no-install-recommends
 
 RUN cd / && \
 	wget https://github.com/YosysHQ/yosys/archive/refs/tags/yosys-0.17.tar.gz && \
@@ -35,7 +35,13 @@ RUN cd / && \
 	git submodule update --init --recursive && \
 	make build && \
 	make install && \
-	make env
+	make env || true
+# prjxray python env installation problem
+RUN cd /prjxray && PATH=/prjxray/env/bin:$PATH pip3 install --upgrade setuptools && PATH=/prjxray/env/bin:$PATH make env
+# Use latest nextpnr-xilinx-meta (with zynq 7030, pcie_2_1)
+RUN cd /nextpnr-xilinx/xilinx/external/nextpnr-xilinx-meta && git pull origin master && git checkout master
+# Patch PCIE_2_1 entry, for PCIe (need better way of handling!)
+RUN sed -i 's/\.PCIE\./.PCIE_2_1./' /nextpnr-xilinx/xilinx/external/prjxray-db/artix7/segbits_pcie_bot.db
 
 #RUN cd / && \
 	#git clone https://github.com/YosysHQ/yosys && \
@@ -48,3 +54,4 @@ COPY ./docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 CMD ["/bin/bash"]
+	#git clone --depth=1 -b iserdese2-ofb https://github.com/openXC7/nextpnr-xilinx.git && \

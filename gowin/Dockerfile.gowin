@@ -1,4 +1,4 @@
-FROM gocd/gocd-agent-ubuntu-22.04:v23.3.0 as base
+FROM ubuntu:22.04 AS base
 USER root
 
 # Set the DEBIAN_FRONTEND environment variable to noninteractive in order to suppress any interactive prompts that might come up during package installation.
@@ -21,16 +21,17 @@ FROM base as build
 # Clone and install Yosys
 RUN git clone https://github.com/YosysHQ/yosys.git && \
     cd yosys && \
+	git submodule update --init && \
 	#git checkout 8e470add4d1d6d1a16711115dbb29c8de8eb54dc && \
-    make && \
+    make -j8 && \
     PREFIX=/opt/yosys make install
 
 # Clone and install nextpnr
 RUN git clone https://github.com/YosysHQ/nextpnr.git && \
     cd nextpnr && \
 	#git checkout a4d2244300ac0cc0293968aabd56d477beb3ebd7 && \
-    cmake . -DBUILD_PYTHON=OFF -DARCH="gowin;himbaechel" -DHIMBAECHEL_GOWIN_DEVICES=all -DBUILD_GUI=OFF -DCMAKE_INSTALL_PREFIX=/opt/nextpnr-gowin -DGOWIN_BBA_EXECUTABLE=$(which gowin_bba) && \
-    make && \
+    cmake . -DARCH="himbaechel" -DHIMBAECHEL_GOWIN_DEVICES=all -DBUILD_GUI=OFF -DCMAKE_INSTALL_PREFIX=/opt/nextpnr-gowin -DGOWIN_BBA_EXECUTABLE=$(which gowin_bba) && \
+    make -j16 && \
     make install
 
 # Clone and install openFPGALoader
@@ -48,4 +49,3 @@ COPY --from=build /opt/nextpnr-gowin /opt/nextpnr-gowin
 COPY --from=build /opt/openfpgaloader /opt/openfpgaloader
 
 ENV PATH /opt/nextpnr-gowin/bin:/opt/yosys/bin:/opt/openfpgaloader/bin:$PATH
-USER go
