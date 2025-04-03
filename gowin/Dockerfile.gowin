@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS base
+FROM ubuntu:24.04 AS base
 USER root
 
 # Set the DEBIAN_FRONTEND environment variable to noninteractive in order to suppress any interactive prompts that might come up during package installation.
@@ -13,8 +13,9 @@ RUN apt-get update && apt-get upgrade -y && \
 # Clone and install Apicula
 RUN git clone https://github.com/YosysHQ/apicula.git && \
     cd apicula && \
+    #python3 -m venv venv && \
 	#git checkout 506d5f9422f57642a78008b71fd0c0434154d648 && \
-    python3 -m pip install apycula
+    python3 -m pip install apycula --break-system-packages
 
 FROM base as build
 
@@ -29,23 +30,25 @@ RUN git clone https://github.com/YosysHQ/yosys.git && \
 # Clone and install nextpnr
 RUN git clone https://github.com/YosysHQ/nextpnr.git && \
     cd nextpnr && \
+    git submodule update --init --recursive && \
+    mkdir build && cd build && \
 	#git checkout a4d2244300ac0cc0293968aabd56d477beb3ebd7 && \
-    cmake . -DARCH="himbaechel" -DHIMBAECHEL_GOWIN_DEVICES=all -DBUILD_GUI=OFF -DCMAKE_INSTALL_PREFIX=/opt/nextpnr-gowin -DGOWIN_BBA_EXECUTABLE=$(which gowin_bba) && \
+    cmake .. -DARCH="himbaechel" -DHIMBAECHEL_GOWIN_DEVICES=all -DHIMBAECHEL_UARCH=gowin -DBUILD_GUI=OFF -DCMAKE_INSTALL_PREFIX=/opt/nextpnr-gowin -DGOWIN_BBA_EXECUTABLE=$(which gowin_bba) && \
     make -j16 && \
     make install
 
-# Clone and install openFPGALoader
-RUN git clone https://github.com/trabucayre/openFPGALoader.git && \
-    cd openFPGALoader && \
-	git checkout 1306c79bdca50efd9e841b660fa967a9a1e58576 && \
-    cmake -DCMAKE_INSTALL_PREFIX=/opt/openfpgaloader . && \
-    make && \
-    make install
+## Clone and install openFPGALoader
+#RUN git clone https://github.com/trabucayre/openFPGALoader.git && \
+    #cd openFPGALoader && \
+	#git checkout 1306c79bdca50efd9e841b660fa967a9a1e58576 && \
+    #cmake -DCMAKE_INSTALL_PREFIX=/opt/openfpgaloader . && \
+    #make && \
+    #make install
 	
 FROM base as production
 
 COPY --from=build /opt/yosys /opt/yosys
 COPY --from=build /opt/nextpnr-gowin /opt/nextpnr-gowin
-COPY --from=build /opt/openfpgaloader /opt/openfpgaloader
+#COPY --from=build /opt/openfpgaloader /opt/openfpgaloader
 
 ENV PATH /opt/nextpnr-gowin/bin:/opt/yosys/bin:/opt/openfpgaloader/bin:$PATH
